@@ -1,0 +1,38 @@
+schema_version: 1
+profile_version: 1
+profile_id: example_unconfigured
+verified: false
+window:
+  title_contains: null
+  process_name: null
+  minimum_width: 800
+  minimum_height: 450
+capture:
+  backend: auto
+  crop_pixels: null
+  target_fps: 30
+  queue_size: 8
+  frozen_frame_threshold: 6
+ui_regions:
+  self_health: null
+  opponent_health: null
+  skill_1: null
+  skill_2: null
+  substitution: null
+  active_character: null
+controls:
+  movement:
+    up: null
+    down: null
+    left: null
+    right: null
+  buttons:
+    normal_attack: null
+    skill_1: null
+    skill_2: null
+    ultimate: null
+    substitution: null
+    secret_scroll: null
+    summon: null
+  emergency_stop: null
+notes: "Copy to configs/local/ and calibrate. Do not edit this example in place."

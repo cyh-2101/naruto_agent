@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+configs/local/
+*.local.yaml
+
+# Data and generated artifacts
+datasets/**
+!datasets/.gitkeep
+artifacts/**
+!artifacts/.gitkeep
+runs/
+checkpoints/
+models/
+*.pt
+*.pth
+*.onnx
+*.engine
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.npy
+
+# Logs
+*.log
+logs/
+
+# Build
+dist/
+build/

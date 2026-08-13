@@ -1,0 +1,25 @@
+schema_version: 1
+experiment_name: unconfigured
+seed: 0
+characters:
+  - taka_sasuke
+  - white_mask
+  - pain
+observation:
+  frame_history: 8
+  structured_state: true
+  visual_latent: true
+policy:
+  architecture: shared_trunk_character_adapters
+  strategic_rate_hz: 2
+  tactical_rate_hz: 8
+  control_rate_hz: 30
+data:
+  dataset_version: null
+  split_by_episode: true
+  include_pseudo_labeled: false
+  include_imagined: false
+online_interaction:
+  enabled: false
+  ranked_or_public_forbidden: true
+notes: "Example only. Learning work begins after runtime and data acceptance gates."

@@ -1,0 +1,72 @@
+schema_version: 1
+character_id: white_mask
+display_name: "白面具"
+status: declared
+verified: false
+lineup_slot: 2
+adapter_key: white_mask
+visual:
+  identity_templates: []
+  animation_templates: {}
+action_space:
+  movement:
+    - neutral
+    - up
+    - down
+    - left
+    - right
+    - up_left
+    - up_right
+    - down_left
+    - down_right
+  buttons:
+    - normal_attack
+    - skill_1
+    - skill_2
+    - ultimate
+    - substitution
+    - secret_scroll
+    - summon
+skills:
+  normal_attack:
+    verified: false
+    press_ms: null
+    recovery_ms: null
+  skill_1:
+    verified: false
+    press_ms: null
+    recovery_ms: null
+    variants: []
+  skill_2:
+    verified: false
+    press_ms: null
+    recovery_ms: null
+    variants: []
+  ultimate:
+    verified: false
+    press_ms: null
+    recovery_ms: null
+  substitution:
+    verified: false
+    press_ms: null
+    recovery_ms: null
+preferred_distance:
+  close: null
+  medium: null
+  far: null
+macros:
+  - approach
+  - retreat
+  - side_step
+  - maintain_distance
+  - normal_combo
+  - skill_1
+  - skill_2
+  - substitution_escape
+  - pressure_after_hit
+  - wait_for_recovery
+combo_graphs: {}
+evaluation_rules: {}
+notes:
+  - "All mechanics and timings are intentionally unverified."
+  - "Calibrate from the user's own training-mode recordings before enabling scripted execution."

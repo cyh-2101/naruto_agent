@@ -1,0 +1,21 @@
+schema_version: 1
+project:
+  name: naruto_agent_lab
+  mode: development
+  data_root: datasets
+  artifact_root: artifacts
+runtime:
+  dry_run: true
+  live_input_enabled: false
+  require_focus: true
+  release_keys_on_error: true
+  frame_stale_after_ms: 250
+  max_action_batches_per_second: 15
+  emergency_stop_key: null
+observation:
+  history_ms: 800
+  structured_state_enabled: true
+  visual_latent_enabled: true
+logging:
+  level: INFO
+  structured: true
