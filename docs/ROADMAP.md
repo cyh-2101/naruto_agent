@@ -1,172 +1,80 @@
 # Capability Roadmap
 
-This roadmap builds the final system in durable capability slices. Each slice must preserve the architecture and produce reusable data, tests, and interfaces.
+Every capability is a durable slice inside Architecture V2. Technical completion never grants live
+input, dataset promotion, model promotion, or the next work order.
 
-## Capability 0 — Foundation and observability
+## Capability 0 — Foundation and V2 contracts
 
-Deliver:
+Status: implementation and safe synthetic verification complete.
 
-- typed core contracts;
-- configuration loading and validation;
-- native Windows environment doctor;
-- window discovery abstraction;
-- capture and input interfaces with mock backends;
-- dry-run-first safety gate and emergency stop;
-- synchronized recording schemas;
-- structured logging;
-- unit tests and an experiment log.
+- configuration, window discovery, mock/native capture boundaries, dry-run/native input factories;
+- scheduler, SafetyGate, emergency-stop interfaces, calibration profiles;
+- immutable bounded recorder, validation, recovery, and mock vertical loop;
+- `Estimate[T]`, `TemporalCombatState`, `SceneEntity`, IR/SQ/IQ views;
+- factorized `SemanticAction`, `ActionCapabilities`, semantic dispatcher;
+- V2 episode stream contracts, metadata registries, and `BehaviorProfile`;
+- V1 manifest readability and V2 schema tests.
 
-Exit evidence:
+This does not prove native capture, perception, mechanics, policy quality, or gameplay control.
 
-- safe tests pass;
-- mock capture-to-policy-to-scheduler loop runs;
-- no automated test sends real input;
-- invalid state fails safe;
-- configuration for all three characters validates while remaining uncalibrated.
+## Capability 1 — Passive observable combat (proposed Work Order 002)
 
-## Capability 1 — Calibrated runtime and observable combat
+Requires explicit Product Owner authorization. No generated input.
 
-Deliver:
+- validate native capture in training mode while input remains disabled;
+- create local calibration evidence;
+- record user-operated demonstrations;
+- implement passive perception adapters for a narrow labeled subset;
+- populate `Estimate[T]`, `TemporalCombatState`, SceneEntity, and IR/SQ/IQ records;
+- measure confidence/freshness, serialization leakage, timestamp alignment, and dataset validity;
+- use offline/manual evaluation only.
 
-- interactive window, crop, UI-region, and control calibration;
-- real low-latency capture benchmark;
-- explicit real-input opt-in;
-- episode recorder and replay viewer;
-- first structured state estimates: health, round phase, active character, approximate positions;
-- debug overlay and confidence reporting.
+Exit requires native evidence and truthful error accounting. It does not authorize imitation learning.
 
-Exit evidence:
+## Capability 2 — Calibrated character execution
 
-- capture reaches a documented stable rate on the user’s emulator;
-- action latency and missed-input rate are measured;
-- recorded frames and key events are time aligned;
-- replay reproduces event timing in dry-run;
-- perception metrics are measured on a labeled sample.
+Future authorization required.
 
-## Capability 2 — Character skill execution
+- calibrate generic semantic slots and character-specific capabilities from user evidence;
+- add adapter/mask tests for temporary mechanics-changing states;
+- shadow or dry-run semantic scheduling first;
+- separately approve any bounded training-mode input check.
 
-Deliver:
+No unverified timings or mechanics may be filled from memory or guesswork.
 
-- calibrated skill definitions for all three characters;
-- action ontology and macro-action interface;
-- conditional combo graphs;
-- execution monitor with hit/miss/interruption paths;
-- scripted baseline using shared combat states and character specs.
+## Capability 3 — Offline demonstration learning
 
-Exit evidence:
+Future authorization required after Capability 1 dataset acceptance.
 
-- each character completes all calibrated actions and at least one conditional sequence;
-- no blind fixed combo continues after a detected miss or interruption;
-- character switching routes to the correct configuration;
-- every live run is recorded and reviewable.
-
-## Capability 3 — Human demonstration learning
-
-Deliver:
-
-- synchronized demonstration collection workflow;
-- quality checks and episode-level train/validation split;
-- temporal behavior-cloning baseline;
-- per-character and joint-training experiments;
-- closed-loop policy runner with confidence fallback.
-
-Exit evidence:
-
-- policy outperforms random and scripted baselines on defined metrics;
-- closed-loop failures are categorized;
-- offline metrics and live performance are reported separately;
-- model version and dataset version are traceable.
+- behavior cloning baselines on immutable user demonstrations;
+- shared temporal backbone with SQ default and IR/IQ ablations;
+- factorized heads, legality metrics, calibration, held-out episodes, and cross-character tests;
+- candidates remain unpromoted and cannot send live input.
 
 ## Capability 4 — Shared multi-character intelligence
 
-Deliver:
+- compare shared backbone plus small adapters against justified baselines;
+- preserve dataset, runtime, and action contracts when changing models;
+- evaluate familiar/unfamiliar opponent identity conditions without hidden state.
 
-- shared temporal visual encoder;
-- shared combat-state encoder;
-- character embedding or adapter routing;
-- shared strategic policy and character-specific tactical/execution outputs;
-- transfer and ablation experiments.
+## Capability 5 — Offline research extensions
 
-Exit evidence:
+Optional, separately authorized experiments may include inverse dynamics, action-free video methods,
+offline policy improvement, or a short-horizon world model. Each stays outside runtime, uses lawful
+data, and must beat simpler baselines. A world model is never a required runtime dependency.
 
-- compare joint model, shared-trunk/separate-head model, and three independent policies;
-- quantify positive or negative transfer;
-- adding a character does not require duplicating the runtime or data pipeline.
+## Capability 6 — Opponent and policy registries
 
-## Capability 5 — Learning from action-free video
+The metadata contracts already exist. Future work may add evaluation-backed candidate/promotion
+workflows. HELT, PFSP, league sampling, and self-play are not implied by the registry contracts.
 
-Deliver:
+## Capability 7 — Lineup and human training-partner research
 
-- legal user-supplied video ingestion;
-- temporal representation pretraining;
-- inverse dynamics trained on labeled demonstrations;
-- confidence-filtered pseudo-actions or latent-action discovery;
-- state-only value learning;
-- controlled comparison against demonstration-only training.
+Only after prior safety, perception, action, and policy gates:
 
-Exit evidence:
+- round and active-character tracking;
+- lineup-level resource reasoning;
+- competence, behavior, fairness, robustness, and human feedback evaluation;
+- bounded private/training use with explicit authorization.
 
-- report whether video pretraining reduces labeled demonstrations or closed-loop matches;
-- report pseudo-label confidence and failure modes;
-- preserve a negative result if no benefit is observed.
-
-## Capability 6 — Offline improvement and world model
-
-Deliver:
-
-- versioned replay dataset containing human, scripted, and learned-policy transitions;
-- offline policy improvement baseline;
-- short-horizon dynamics and outcome model;
-- imagined-rollout experiments restricted to validated horizons.
-
-Exit evidence:
-
-- model calibration and prediction error are reported by horizon;
-- imagined data is never mixed with real data without provenance;
-- online evaluation verifies whether offline/world-model gains transfer.
-
-## Capability 7 — Opponent adaptation and policy pool
-
-Deliver:
-
-- opponent feature and style model;
-- historical policy registry;
-- opponent sampling and targeted weakness evaluation;
-- regression suite preventing catastrophic loss of earlier skills.
-
-Exit evidence:
-
-- performance is measured across multiple opponent conditions;
-- adaptation is compared with a no-memory baseline;
-- policy-pool claims correspond to saved, reproducible versions.
-
-## Capability 8 — Lineup-level intelligence
-
-Deliver:
-
-- active-character and round tracking;
-- cross-round opponent memory;
-- lineup manager and next-character strategic conditioning;
-- full three-character episode schema and evaluation.
-
-Exit evidence:
-
-- system completes full lineup matches;
-- compare persistent opponent memory against reset-every-round behavior;
-- all three character policies remain independently evaluable.
-
-## Capability 9 — Human training partner
-
-Deliver:
-
-- difficulty, reaction-delay, aggression, risk, and execution-noise conditioning;
-- style presets and optional player-specific adaptation;
-- human-readable post-match analysis;
-- consent and session controls.
-
-Exit evidence:
-
-- difficulty changes are measurable, not cosmetic;
-- reaction time and execution accuracy remain within configured bounds;
-- users can stop, inspect, and delete local session data;
-- no mode depends on hidden information or anti-cheat evasion.
+No current artifact demonstrates this capability.

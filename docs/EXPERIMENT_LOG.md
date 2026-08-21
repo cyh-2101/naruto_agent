@@ -110,6 +110,67 @@ Append entries. Do not delete failed runs.
 - Next action: establish Git provenance, install the Windows extra, open only a training-mode emulator,
   create an unverified local profile, and benchmark native capture with input disabled.
 
+## EXP-20260821-001 — Architecture V2 contract refactor
+
+- Goal: translate approved screen-only architecture ideas into durable runtime/data contracts,
+  tests, documentation, and a passive proposed Work Order 002 without starting learning or input.
+- Baseline commit: `95891fd` on `main`.
+- Branch: `architecture/v2-screen-only-policy`.
+- Environment: Windows PowerShell, Python 3.12.13 virtual environment; no emulator interaction.
+- Research inputs:
+  - repository architecture/status/safety documentation;
+  - user-provided `docs/SHUKAI_KIHAN_ARCHITECTURE_IDEAS.md`;
+  - local 21-page `D:\projects\kihan\arxiv-2406.01103.pdf` text layer, with relevant identity,
+    factorized-action, mask, HELT/PFSP, and behavior sections located.
+- Commands:
+  - `git switch -c architecture/v2-screen-only-policy`;
+  - `.\.venv\Scripts\python.exe -m pytest -ra`;
+  - `.\.venv\Scripts\python.exe -m ruff check .` and `ruff format src tests`;
+  - `.\.venv\Scripts\python.exe -m compileall -q src tests`;
+  - two attempts at `.\.venv\Scripts\python.exe -m pip install -e ".[dev]"`;
+  - successful `.\.venv\Scripts\python.exe -m pip install -e .`.
+- Results:
+  - initial compilation and Ruff baseline passed;
+  - initial pytest collection failed because the existing virtual environment lacked the editable
+    project and Pydantic;
+  - after core dependency restoration, the first V2 checkpoint passed 60 tests;
+  - after typed V2 action/capability/dispatch records, the suite passed `61 passed in 0.66s`;
+  - final gap tests for optional strategic intent, capability expiry, and scene-entity serialization
+    produced `64 passed in 0.68s`;
+  - final pre-commit rerun produced `64 passed in 0.73s`, Ruff passed, compilation passed, and
+    `git diff --check` reported no whitespace errors;
+  - Ruff and bytecode compilation passed after the code changes;
+  - the original 40 Foundation tests remain in the passing suite;
+  - no test constructed a native Windows input backend or used a live marker.
+  - native doctor completed with zero visible emulator candidates and did not capture or send input;
+  - mock episode `b1bb1f5f-40bb-4a66-bc21-19a26b6f3d40` finalized with 8 frames, 0 input
+    events, 8 neutral control intervals, expected `raw_frame_fallback`, and 0 validation errors.
+- Verified contracts:
+  - estimate value/unknown/confidence/freshness behavior;
+  - canonical temporal state and scene-entity schemas;
+  - IR/SQ/IQ identity visibility and serialized leak protection;
+  - nine-way factorized movement;
+  - capability rejection before adaptation and SafetyGate rejection after acceptance;
+  - V2 episode/runtime serialization and V1 manifest readability.
+- Failures or anomalies:
+  - the PDF render wrapper referenced a missing Poppler executable path; selected-page PNG rendering
+    failed, while text extraction succeeded;
+  - both dev-extra installs stalled while downloading the 11.2 MB mypy wheel; the second process was
+    terminated after repeated no-progress intervals;
+  - mypy was therefore unavailable and not run;
+  - the failed pre-install pytest collection is not counted as a code test result.
+- Artifacts:
+  - source, tests, ADR, documentation, and proposed Work Order 002 only;
+  - no dataset, capture, calibration, video, game asset, model, checkpoint, or credential generated.
+- Interpretation:
+  - Architecture V2 contracts and their mock/synthetic safety boundaries are verified;
+  - passive game perception, native capture, character mechanics, trained policy quality, and live
+    gameplay remain unverified or absent;
+  - Shūkai/Kihan provide research ideas only; their hidden-state, PPO, league, direct-input, and
+    reward results are not project evidence.
+- Next action: Product Owner review of the passive-only Work Order 002; do not start it or any
+  learning/input work without explicit authorization.
+
 ## Entry template
 
 ### EXP-YYYYMMDD-NNN — Title

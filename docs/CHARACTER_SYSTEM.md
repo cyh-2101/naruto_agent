@@ -1,118 +1,78 @@
-# Character System
+# Character System V2
 
-## Design goal
+## Design rule
 
-The three initial characters share a common combat ontology but retain independent mechanics and execution knowledge. Adding a fourth character should require a new specification, calibration data, and optionally an adapter—not a copy of the repository.
+The platform has one shared temporal combat architecture, not three complete character stacks.
+Character-specific knowledge is configuration-driven and remains unverified until calibrated from
+the user's own lawful training-mode evidence.
 
 ## Shared knowledge
 
-Examples:
-
-- approach and retreat;
-- vertical evasion;
-- hit confirmation;
-- knockdown and recovery;
-- pressure and disengagement;
-- opponent substitution inference;
-- risk and distance reasoning;
-- round and lineup context.
+- temporal motion and interaction representation;
+- relative geometry, distance, pressure, defense, and resource tradeoffs;
+- the IR/SQ/IQ observation schemas;
+- factorized vertical, horizontal, skill, and direction heads;
+- scheduler, SafetyGate, episode schema, registries, and evaluation contracts.
 
 ## Character-specific knowledge
 
-Examples:
+- visible identity and animation templates;
+- local calibration references;
+- semantic-slot capabilities and temporary capability changes;
+- generic semantic-to-control adaptation;
+- verified timing, cancel, and readiness evidence;
+- a small conditioning adapter or policy head;
+- optional verified behavior profile.
 
-- visual identity and animation templates;
-- skill variants and follow-ups;
-- input timing ranges;
-- cancel windows;
-- preferred distance bands;
-- legal action transitions;
-- conditional combo graph;
-- adapter or policy-head checkpoint;
-- character-specific evaluation rules.
+None of these authorizes keyboard bindings inside a policy.
 
-No exact mechanic is considered true until calibrated and recorded as verified.
+## Current characters
 
-## Character specification lifecycle
+`taka_sasuke`, `white_mask`, and `pain` have declared schema-valid YAML packages. Their skill timing,
+variants, readiness cues, preferred distances, macros, combo graphs, and evaluation rules remain
+unverified or empty. The V2 refactor did not fill them.
 
-1. `declared` — identity exists, mechanics unknown;
-2. `input_calibrated` — buttons and movement mappings verified;
-3. `timing_calibrated` — action durations and recovery ranges measured;
-4. `visual_calibrated` — templates and action phases labeled;
-5. `script_verified` — scripted action and conditional sequence succeed;
-6. `policy_ready` — learned policy passes closed-loop acceptance tests.
+## Semantic action ontology
 
-## Action ontology
+Policies emit `SemanticAction`:
 
-Low-level movement:
+- vertical: neutral/up/down;
+- horizontal: neutral/left/right;
+- skill: none, normal attack, generic skill slots, ultimate, substitution, scroll, summon, or
+  extensible subskill slots;
+- optional direction 1–8;
+- hold duration, deadline, cancel condition, confidence.
 
-- neutral;
-- up, down, left, right;
-- four diagonals.
+`LegacyControlAdapter` maps only currently generic slots to `ControlCommand`. It contains no key map
+and raises on unmapped subskills. Character adapters may add calibrated interpretations later, but
+they must not guess mechanics.
 
-Buttons:
+## ActionCapabilities
 
-- normal attack;
-- skill 1;
-- skill 2;
-- ultimate;
-- substitution;
-- secret scroll;
-- summon.
+Capabilities answer “is this semantic factor available now?” They are distinct from SafetyGate,
+which answers “may any input be sent safely now?”
 
-Macro actions are semantic requests such as:
+A capability snapshot declares time-bounded allowed vertical/horizontal/skill/direction sets, a
+version/source, and rejection reasons. Temporary mechanics-changing states can be expressed by a new
+short-lived snapshot after a screen-derived state estimate supports it. Without evidence, the
+unverified default permits only neutral factors.
 
-- approach;
-- retreat;
-- side step;
-- maintain distance;
-- normal combo;
-- use skill;
-- continue on hit;
-- abort on miss;
-- substitution escape;
-- pressure after hit;
-- wait for recovery.
+## Identity conditioning
 
-## Conditional combo graph
+- IR may condition on fresh, confident self and opponent identities.
+- SQ, the default, conditions on configured self identity and hides opponent identity.
+- IQ hides both identities.
 
-A sequence is a graph, not a blind list:
+All use the same `TemporalCombatState` and shared backbone. A model replacement must not require a
+new recorder or runtime.
 
-```text
-skill_start
-├── hit_confirmed ──► continuation choice
-├── missed ─────────► disengage or defend
-├── interrupted ────► recover
-└── opponent_substituted ──► defensive response
-```
+## Lifecycle
 
-Every node may specify:
+1. declared — schema valid, mechanics not trusted;
+2. observed — user evidence exists but is not yet accepted;
+3. calibrated — bounded fields have evidence and tests;
+4. candidate — adapter/policy artifact exists offline;
+5. validated — offline/manual acceptance evidence exists;
+6. promoted — separate Product Owner authorization.
 
-- preconditions;
-- action request;
-- expected visual evidence;
-- timeout;
-- success edges;
-- failure edges;
-- safe fallback.
-
-## Model routing
-
-Recommended final organization:
-
-```text
-shared temporal visual encoder
-+ shared structured-state encoder
-+ shared belief and strategic policy
-+ character embedding
-+ character adapter
-+ character skill executor
-```
-
-Required experimental baselines:
-
-- three independent policies;
-- shared trunk with separate heads;
-- fully character-conditioned shared model.
-
-The architecture should permit all three without changing the data pipeline.
+No current character is calibrated, validated, or promoted.

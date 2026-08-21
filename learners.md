@@ -134,6 +134,78 @@ python scripts/episode.py validate "<episode-directory>"
 
 ---
 
+## Architecture Checkpoint V2 — 纯视觉策略契约
+
+状态：契约已实现，64 个安全测试通过；没有实机感知、训练或真实输入。
+
+### 这次解决了什么
+
+- 用 `Estimate[T]` 区分“值为 0/false”和“根本不知道”；
+- 用一个 `TemporalCombatState` 保存双方、相对位置、回合和场景实体的时序状态；
+- 从同一个状态生成 IR、SQ、IQ 三种身份视图，默认使用 SQ；
+- 策略以后输出 `SemanticAction`，不再直接理解按键；
+- 用 `ActionCapabilities` 判断角色此刻能不能做某动作，再经过 scheduler 和 SafetyGate；
+- Episode V2 会明确记录某条数据流是 valid、unknown、stale 还是 not implemented。
+
+### 必须理解的数据流
+
+```text
+画面 -> 被动感知 -> TemporalCombatState -> IR/SQ/IQ
+-> 共享时序骨干 -> 角色适配 -> SemanticAction
+-> ActionCapabilities -> 角色动作适配
+-> ActionScheduler -> SafetyGate -> InputBackend
+```
+
+其中从“被动感知”到“共享时序骨干”目前只有契约，没有可用游戏模型。
+
+### 三种视图
+
+- IR：置信度和新鲜度足够时，可以看到双方身份；
+- SQ（默认）：只知道我方配置身份，不暴露对手身份；
+- IQ：双方身份都隐藏。
+
+隐藏身份时，序列化结果里连字段都不存在，不是写成 `null`。
+
+### 能力和安全为什么分开
+
+`ActionCapabilities` 判断动作是否合法或是否已校准；`SafetyGate` 判断现在是否允许发送任何
+输入。动作即使合法，也仍然可能因为 dry-run、失焦、旧画面或急停而被 SafetyGate 拒绝。
+
+### 主要代码入口
+
+- `src/naruto_agent/core/estimates.py`
+- `src/naruto_agent/core/combat_state.py`
+- `src/naruto_agent/core/observations.py`
+- `src/naruto_agent/core/actions.py`
+- `src/naruto_agent/runtime/semantic.py`
+- `src/naruto_agent/data/models.py`
+- `docs/ARCHITECTURE.md`
+- `docs/CODEX_WORK_ORDER_002.md`
+
+### 当前不能声称
+
+- 不能说系统已经能从游戏画面识别血量、技能或角色；
+- 不能说任何角色机制、动作时间或连招已校准；
+- 不能说共享骨干或策略模型已经实现或训练；
+- 不能说测试证明了真实模拟器、DXCam、SendInput 或游戏水平；
+- 不能开始 BC、PPO、RL、自博弈、HELT/PFSP 或 world model。
+
+### 学完后应能回答
+
+1. `Estimate(False)` 与 unavailable 有什么区别？
+2. 为什么 IR/SQ/IQ 必须来自同一个状态？
+3. SQ 默认视图隐藏了什么、保留了什么？
+4. `SemanticAction` 怎样到达输入后端？
+5. `ActionCapabilities` 与 `SafetyGate` 各负责什么？
+6. 64 个测试证明了什么，又没有证明什么？
+
+### 小练习
+
+让 ChatGPT 给你一个“技能动作合法，但画面已过期”的例子，然后由你解释系统应该在哪两
+个阶段分别做出什么决定。
+
+---
+
 ## 后续 Stage 追加模板
 
 ### Stage N — 名称

@@ -151,7 +151,7 @@ class ControlCommand:
 @dataclass(frozen=True, slots=True)
 class PolicyOutput:
     timestamp_ns: int
-    strategic: StrategicDecision
+    strategic: StrategicDecision | None
     macro: MacroActionRequest | None
     control: ControlCommand | None
     confidence: float

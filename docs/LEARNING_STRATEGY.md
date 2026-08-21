@@ -1,105 +1,71 @@
-# Learning Strategy
+# Learning Strategy and Authorization Boundaries
 
-## Guiding rule
+## Current state
 
-Do not rely on one learning method. Each data source solves a different problem.
+No learning algorithm was added or run in the Architecture V2 refactor. There is no trained policy,
+behavior-cloning model, reinforcement-learning loop, self-play system, opponent sampler, or world
+model in the approved runtime.
 
-## Stage A — Temporal visual representation
+## Preconditions for any learning work
 
-Use frame sequences from user-supplied gameplay to learn motion- and action-sensitive features. Candidate objectives may include temporal contrast, masked-frame modeling, future-feature prediction, and action-phase classification.
+- an explicitly authorized work order;
+- immutable, lawful, user-owned or consented data;
+- accepted schema, timestamp, calibration, split, and label quality;
+- a simple baseline and evaluation plan;
+- candidate-only outputs with no live-input authority;
+- reproducible metadata in dataset and policy registries.
 
-Output: a versioned visual encoder that can be evaluated separately.
+## Recommended future sequence
 
-## Stage B — Behavior cloning
+1. Passive temporal representation and perception evaluation.
+2. User-operated demonstration collection and dataset acceptance.
+3. Offline behavior-cloning baselines with SQ default and IR/IQ ablations.
+4. Shared-backbone versus justified adapter/head baselines.
+5. Only if separately authorized, offline improvement or action-free-video experiments.
+6. Only after much later safety and Product Owner gates, bounded live-input research.
 
-Train on synchronized human demonstrations.
+Do not begin with random raw-pixel PPO.
 
-Inputs:
+## Policy architecture for future candidates
 
-- recent frames or visual embeddings;
-- structured perception state;
-- previous action;
-- character ID and optional adapter.
-
-Outputs:
-
-- movement;
-- button or macro action;
-- optional duration and confidence.
-
-Requirements:
-
-- temporal context;
-- episode-level splits;
-- class imbalance handling;
-- per-character and joint metrics;
-- closed-loop evaluation, not only offline accuracy.
-
-## Stage C — Inverse dynamics and action-free video
-
-Train an inverse dynamics model on labeled transitions:
+All policy families must preserve the same boundary:
 
 ```text
-(previous visual context, next visual context, character context) -> action distribution
+versioned ObservationView -> shared temporal backbone -> character conditioning
+-> factorized semantic heads -> SemanticAction
 ```
 
-Apply it only to user-supplied action-free videos. Retain soft distributions and confidence. Filter or down-weight uncertain pseudo-labels.
+Strategic intent is optional auxiliary context or an auxiliary prediction head. It is not a required
+three-controller hierarchy. Models never learn key bindings.
 
-A second experimental route may learn latent actions first and map them to real actions using the labeled subset.
+## Identity-ablation plan
 
-## Stage D — State-only value learning
+IR, SQ, and IQ are controlled views from one state and one dataset lineage. Compare them on held-out
+episodes and unfamiliar-opponent conditions. Identity fields and provenance must be audited for
+leakage before attributing any performance difference to identity conditioning.
 
-Even when exact actions cannot be inferred, trajectories can teach which states tend to lead toward advantage or danger. Learn state or belief value with explicit uncertainty and avoid treating edited highlight clips as unbiased trajectories.
+## Registries are not leagues
 
-## Stage E — Offline policy improvement
+The policy, opponent, and dataset registry contracts exist so future artifacts can be named,
+versioned, and reproduced. They do not implement HELT, PFSP, policy pools, matchmaking, self-play, or
+promotion. Those require distinct work orders and evidence.
 
-Build an immutable replay dataset from:
+## BehaviorProfile
 
-- human demonstrations;
-- scripted baseline runs;
-- learned-policy runs;
-- consenting private matches;
-- confidence-filtered pseudo-labeled video.
+Behavior profiles encode optional style targets such as aggression, caution, resource conservation,
+and move preferences. Unknown values remain null. Verified profiles require an evidence reference.
+Style alignment must be evaluated separately from competence, legality, and safety.
 
-Compare conservative offline methods against behavior cloning. All transitions retain provenance.
+## World-model boundary
 
-## Stage F — Limited online refinement
+A world model is an optional future offline learning experiment. It must not be imported by capture,
+state, view, action, scheduler, safety, or input modules. It must outperform simpler temporal
+baselines before any promotion discussion. The current roadmap and Work Order 002 do not authorize
+one.
 
-The emulator is slow and cannot be treated as a high-throughput simulator. Closed-loop interaction should primarily correct:
+## Research references
 
-- compounding imitation errors;
-- missed attacks and interruptions;
-- unseen opponent behavior;
-- real input latency;
-- perception errors.
-
-Begin from a competent imitation policy and macro actions. Do not begin from random raw-pixel PPO.
-
-## Stage G — World model
-
-Learn short-horizon state and outcome prediction. Validate error versus horizon before using imagined rollouts. Never present model-generated experience as real experience.
-
-## Stage H — Continual and multi-character learning
-
-Use replay and regression evaluation to avoid losing earlier character skills. Track positive and negative transfer. Character adapters may be frozen, fine-tuned, or expanded based on evidence rather than assumption.
-
-## Mandatory baselines
-
-- scripted controller;
-- behavior cloning per character;
-- behavior cloning jointly;
-- shared encoder with separate heads;
-- joint character-conditioned policy;
-- demonstration-only versus demonstration-plus-video;
-- no-belief versus belief-state policy;
-- flat versus hierarchical control.
-
-## Evaluation caution
-
-Offline action accuracy does not prove gameplay competence. Every model report must distinguish:
-
-- offline held-out metrics;
-- scripted-scenario closed-loop metrics;
-- full-match metrics;
-- number and type of evaluation episodes;
-- real versus simulated or imagined outcomes.
+Shūkai supports investigating identity ablations, factorized actions, masks, heterogeneous metadata,
+and behavior evaluation. Its client-internal state and PPO/HELT results are not project evidence.
+Kihan can inform passive perception experiments, but its direct input, monolithic loop, single-frame
+policy, and cumulative-reward behavior are rejected.

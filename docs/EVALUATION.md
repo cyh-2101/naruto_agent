@@ -1,86 +1,77 @@
-# Evaluation Plan
+# Evaluation Plan V2
 
-## Evaluation layers
+## Evidence classes
 
-### Runtime
+Every result must state whether it is schema, unit/synthetic, mock integration, native passive,
+offline model, bounded live-input, or human/product evidence. One class cannot be reported as
+another.
 
-- capture FPS and frame-time distribution;
-- duplicate and dropped frames;
-- capture-to-decision latency;
-- decision-to-input latency;
-- missed or stuck input rate;
-- focus-loss and emergency-stop behavior;
-- memory and CPU usage over long runs.
+## Runtime and safety
 
-### Perception
+- monotonic frame and decision timestamps;
+- capture freshness, duplicate/drop/freeze accounting;
+- calibration and focus failures;
+- held-key cleanup and emergency-stop behavior;
+- action-rate, timeout, and stale-state rejection;
+- proof that semantic actions traverse capabilities, adapter, scheduler, and SafetyGate.
 
-- health estimation error;
-- position error in normalized screen coordinates;
-- active-character accuracy;
-- round-phase accuracy;
-- animation-state macro F1;
-- calibration and expected calibration error for confidence;
-- failure rate under visual effects and occlusion.
+Current evidence: safe unit/mock tests only. Native capture and input remain unverified.
 
-### Action execution
+## Estimate and temporal state
 
-- requested versus executed action;
-- timing error;
-- successful action completion;
-- interruption detection;
-- blind continuation after miss;
-- safe fallback frequency.
+- false/zero versus unavailable discrimination;
+- confidence calibration and threshold behavior;
+- freshness/staleness and source/provenance completeness;
+- temporal alignment and sequence continuity;
+- passive accuracy for health, energy, position, phase, readiness, round state, and scene entities;
+- explicit not-implemented, unknown, invalid, and stale rates.
 
-### Policy
+No passive game accuracy has been measured yet.
 
-- movement and button accuracy;
-- macro F1;
-- per-character confusion matrices;
-- temporal consistency;
-- closed-loop damage dealt and received;
-- damage differential;
-- successful hit confirmation;
-- empty-skill frequency;
-- substitution usage;
-- inactivity;
-- win/loss with the exact number of matches.
+## Observation views
 
-### Multi-character and lineup
+- IR identity threshold behavior;
+- SQ opponent-ID absence and configured self-ID presence;
+- IQ absence of both IDs;
+- serialized key/value/provenance leakage audit;
+- identical source state and dataset lineage across view comparisons.
 
-- per-character performance;
-- joint versus independent training;
-- transfer to a held-out opponent condition;
-- persistent lineup memory versus reset baseline;
-- first-round observations changing later-round strategy.
+Current evidence: synthetic contract and serialization tests only.
 
-### Human-like control
+## Actions and capabilities
 
-- measured reaction-delay distribution;
-- execution error rate;
-- aggression and retreat frequency;
-- difficulty curve;
-- consistency with configured style.
+- all nine movement compositions;
+- per-factor semantic-action accuracy when a future policy exists;
+- capability-mask false accept/reject rates;
+- temporary capability expiry;
+- unsupported slot, deadline, and stale-capability rejection reasons;
+- scheduler and safety decision agreement.
 
-## Reproducibility record
+Current evidence: movement, rejection, and no-bypass unit tests; no character mechanic evidence.
 
-Every report must state:
+## Data quality
 
-- code commit;
-- dataset version;
-- model version;
-- emulator and capture profile;
-- character configuration versions;
-- random seed where applicable;
-- number of episodes;
-- opponent condition;
-- whether evaluation was live, replayed, offline, or imagined.
+- manifest/event schema validation and V1 readability;
+- checksum and raw immutability;
+- stream status correctness;
+- episode-level splits and provenance;
+- annotation review, class balance, missingness, and confidence distributions;
+- no credentials, game assets, recordings, or checkpoints in Git.
 
-## Promotion gate
+## Future policy evaluation
 
-A policy may be promoted to the default live candidate only if:
+Only after explicit authorization and dataset acceptance:
 
-- no safety regression occurs;
-- runtime and perception are within documented limits;
-- it passes a fixed regression suite for all supported characters;
-- evaluation includes enough episodes to state the sample size honestly;
-- artifacts and metrics are saved in the policy registry.
+- held-out imitation metrics and temporal baselines;
+- legality and calibration, not just action accuracy;
+- familiar/unfamiliar opponent conditions for IR/SQ/IQ;
+- shared-backbone versus justified alternatives;
+- competence, behavior profile fit, robustness, fairness, and safety as separate axes.
+
+Win rate alone is insufficient. Shūkai or Kihan results are references, not baselines achieved here.
+
+## Promotion gates
+
+Contract implementation, technical validation, dataset acceptance, model promotion, live-input
+authorization, and product acceptance are separate decisions. No automated test may self-approve the
+next gate.

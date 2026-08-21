@@ -5,7 +5,12 @@ import pytest
 
 from naruto_agent.core.contracts import ControlCommand
 from naruto_agent.core.enums import CharacterId
-from naruto_agent.data.models import EpisodeManifest, QualityFlag
+from naruto_agent.data.models import (
+    EpisodeManifest,
+    EpisodeStreamRole,
+    FeatureAvailability,
+    QualityFlag,
+)
 from naruto_agent.data.recorder import EpisodeRecorder, inspect_episode, validate_episode
 from naruto_agent.runtime.capture.mock import MockCaptureBackend
 
@@ -33,6 +38,12 @@ def test_episode_finalizes_and_validates_after_injected_exception(tmp_path: Path
         (recorder.episode_dir / "manifest.json").read_text(encoding="utf-8")
     )
     assert manifest.ended_at_utc is not None
+    assert manifest.schema_version == 2
+    streams = {stream.role: stream for stream in manifest.streams}
+    assert streams[EpisodeStreamRole.FRAME_INDEX].status is FeatureAvailability.VALID
+    assert (
+        streams[EpisodeStreamRole.OBSERVATION_VIEWS].status is FeatureAvailability.NOT_IMPLEMENTED
+    )
     assert QualityFlag.INCOMPLETE_FINALIZATION in manifest.quality_flags
     assert validate_episode(recorder.episode_dir) == []
 

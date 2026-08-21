@@ -20,6 +20,9 @@ from naruto_agent.data.models import (
     ControlStateInterval,
     EpisodeFile,
     EpisodeManifest,
+    EpisodeStreamDescriptor,
+    EpisodeStreamRole,
+    FeatureAvailability,
     FrameIndexEvent,
     InputEvent,
     QualityFlag,
@@ -44,6 +47,11 @@ class EpisodeRecorder:
         max_raw_frames: int = 300,
         timestamp_gap_ms: int = 250,
         code_commit: str | None = None,
+        model_version: str | None = None,
+        policy_version: str | None = None,
+        calibration_profile_version: str | None = None,
+        character_config_version: str | None = None,
+        observation_view_version: str | None = None,
     ) -> None:
         if controlled_character is CharacterId.UNKNOWN:
             raise ValueError("recording requires a selected controlled character")
@@ -64,13 +72,10 @@ class EpisodeRecorder:
         self._frame_handle = self._open_jsonl("frame_index.jsonl")
         self._input_handle = self._open_jsonl("input_events.jsonl")
         self._action_handle = self._open_jsonl("actions.jsonl")
-        hashes = {
-            name: _stable_hash(value)
-            for name, value in configuration.items()
-        }
+        hashes = {name: _stable_hash(value) for name, value in configuration.items()}
         started_ns = monotonic_ns()
         self.manifest = EpisodeManifest(
-            schema_version=1,
+            schema_version=2,
             episode_id=self.episode_id,
             session_id=session_id or uuid4(),
             source_type=source_type,
@@ -85,6 +90,12 @@ class EpisodeRecorder:
             code_commit=(
                 code_commit if code_commit is not None else discover_code_commit(Path.cwd())
             ),
+            model_version=model_version,
+            policy_version=policy_version,
+            calibration_profile_version=calibration_profile_version,
+            character_config_version=character_config_version,
+            observation_view_version=observation_view_version,
+            streams=_foundation_streams(),
             quality_flags=[QualityFlag.RAW_FRAME_FALLBACK],
             notes="Foundation bounded raw-frame fallback; no model/perception outputs recorded.",
         )
@@ -120,7 +131,7 @@ class EpisodeRecorder:
             raise FileExistsError(f"raw frame is immutable and already exists: {relative}")
         np.save(destination, frame.image, allow_pickle=False)
         event = FrameIndexEvent(
-            schema_version=1,
+            schema_version=2,
             frame_id=frame.frame_id,
             timestamp_ns=frame.timestamp_ns,
             duplicate=frame.duplicate,
@@ -142,7 +153,7 @@ class EpisodeRecorder:
         start_ns = max(command.timestamp_ns, self._last_action_end + 1)
         end_ns = start_ns + command.hold_ms * 1_000_000
         interval = ControlStateInterval(
-            schema_version=1,
+            schema_version=2,
             start_ns=start_ns,
             end_ns=end_ns,
             movement=command.movement,
@@ -381,3 +392,42 @@ def _line_count(path: Path) -> int:
             return sum(1 for _line in handle)
     except FileNotFoundError:
         return 0
+
+
+def _foundation_streams() -> list[EpisodeStreamDescriptor]:
+    implemented = (
+        (EpisodeStreamRole.RAW_FRAMES, "frames"),
+        (EpisodeStreamRole.FRAME_INDEX, "frame_index.jsonl"),
+        (EpisodeStreamRole.INPUT_EVENTS, "input_events.jsonl"),
+        (EpisodeStreamRole.CONTROL_INTERVALS, "actions.jsonl"),
+    )
+    pending = (
+        EpisodeStreamRole.PERCEPTION_ESTIMATES,
+        EpisodeStreamRole.TEMPORAL_COMBAT_STATE,
+        EpisodeStreamRole.OBSERVATION_VIEWS,
+        EpisodeStreamRole.SEMANTIC_ACTIONS,
+        EpisodeStreamRole.ACTION_CAPABILITIES,
+        EpisodeStreamRole.ACTION_MASKS,
+        EpisodeStreamRole.SCHEDULER_DECISIONS,
+        EpisodeStreamRole.SAFETY_DECISIONS,
+        EpisodeStreamRole.ANNOTATIONS,
+    )
+    streams = [
+        EpisodeStreamDescriptor(
+            role=role,
+            schema_version=2,
+            status=FeatureAvailability.VALID,
+            relative_path=path,
+        )
+        for role, path in implemented
+    ]
+    streams.extend(
+        EpisodeStreamDescriptor(
+            role=role,
+            schema_version=2,
+            status=FeatureAvailability.NOT_IMPLEMENTED,
+            reason="contract reserved; Work Order 002 or later will populate this stream",
+        )
+        for role in pending
+    )
+    return streams

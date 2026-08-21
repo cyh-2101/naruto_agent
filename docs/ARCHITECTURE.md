@@ -1,241 +1,157 @@
-# Architecture
+# Architecture V2 — Screen-Only Multi-Character Policy Platform
 
-## System overview
+## Authority and evidence boundary
 
-```text
-Windows emulator
-    │ frames                                  ▲ safe key commands
-    ▼                                         │
-Runtime I/O ──► Perception ──► Belief & Memory ──► Hierarchical Decision
-    │                 │                │                   │
-    │                 │                │                   ▼
-    │                 │                └────► Opponent Model / Lineup Memory
-    │                 │                                    │
-    │                 └──────────────► Character Context    ▼
-    │                                                 Skill System
-    │                                                      │
-    └────────► Recorder ◄──────── all typed events ◄──── Scheduler & Safety
-                    │
-                    ▼
-              Versioned Data Lake
-                    │
-       ┌────────────┴──────────────────────────────┐
-       ▼                                           ▼
-Representation / Imitation / Offline Learning   Evaluation / Policy Registry
-       │                                           │
-       └────────────► optional World Model ◄────────┘
-```
+The runtime may use only pixels visible to a normal player and normal emulator input. It may not use
+game memory, injected hooks, network traffic, hidden hitboxes, internal cooldowns, or other client
+state. Every screen-derived value is an `Estimate[T]` with evidence and freshness; missing values
+stay missing.
 
-## Layer 1: Runtime I/O
+The V2 contracts are implemented and synthetic-tested. Perception adapters, learned models, native
+capture performance, calibrated character mechanics, and real gameplay control are not thereby
+implemented or verified.
 
-Responsibilities:
-
-- emulator-window discovery and tracking;
-- low-latency frame capture;
-- monotonic timestamps;
-- input abstraction and key release;
-- focus and frozen-frame checks;
-- action scheduling;
-- emergency stop;
-- synchronized episode recording;
-- replay using recorded events.
-
-Interfaces:
-
-- `CaptureBackend`;
-- `InputBackend`;
-- `WindowLocator`;
-- `ActionScheduler`;
-- `SafetyGate`;
-- `EpisodeRecorder`.
-
-No model may call the input backend directly.
-
-## Layer 2: Perception
-
-Perception uses two complementary paths.
-
-### Structured path
-
-Estimates interpretable variables such as:
-
-- self and opponent position;
-- relative displacement and distance;
-- health;
-- visible readiness indicators;
-- attack, movement, hit, knockdown, recovery, and round phase;
-- current controlled character;
-- confidence for every estimate.
-
-Simple calibrated computer vision is preferred where it is more reliable than a neural model.
-
-### Latent visual path
-
-A temporal encoder maps a recent frame sequence to a learned embedding:
+## Approved runtime path
 
 ```text
-z_t = VisualEncoder(frames[t-k:t])
+Emulator
+  -> Frame Capture
+  -> Perception Adapters
+  -> TemporalCombatState
+  -> Belief / Temporal Encoder
+  -> ObservationViewBuilder -> IR | SQ (default) | IQ
+  -> Shared Temporal Backbone
+  -> Character Conditioning / Adapter
+  -> Factorized Semantic Action Heads
+  -> SemanticAction
+  -> ActionCapabilities + legality/action mask
+  -> CharacterActionAdapter
+  -> ActionScheduler
+  -> SafetyGate
+  -> InputBackend
 ```
 
-This preserves information that is difficult to hand-label, including animation phase, effect motion, and subtle pre-action cues.
-
-The policy observation is hybrid:
+No policy or model may call an input backend, key API, or emulator coordinate directly. The V2
+`SemanticActionDispatcher` enforces the implemented tail of this path:
 
 ```text
-observation_t = structured_state + visual_latent + previous_action + character_context
+SemanticAction -> ActionCapabilities -> CharacterActionAdapter
+               -> ActionScheduler -> SafetyGate -> InputBackend
 ```
 
-## Layer 3: Belief state and opponent model
+Capability rejection stops before adaptation. Safety rejection still applies after capability
+acceptance. These are different decisions and both must be recorded when the recorder gains the V2
+runtime streams.
 
-The game is partially observable. The system maintains a temporal belief rather than trusting one frame.
+## Side systems
 
-Examples of latent beliefs:
+The following systems observe or catalog runtime artifacts but do not bypass the runtime path:
 
-- probability that opponent substitution is available;
-- probability that opponent skills are available;
-- current combo phase;
-- opponent aggression and preferred approach patterns;
-- risk estimate;
-- uncertainty and stale-observation indicators.
+- immutable raw episode recorder and versioned derived streams;
+- dataset, policy, opponent, and evaluation registries;
+- optional `BehaviorProfile` metadata for style and preference targets;
+- calibration and character configuration packages;
+- offline/manual evaluation and promotion evidence.
 
-Initial implementation may use rules plus a GRU. The interface must allow replacement by a temporal transformer or state-space model.
+Learning jobs consume immutable datasets and emit candidates to registries. They do not become
+runtime components merely by existing.
 
-## Layer 4: Hierarchical decision system
+## Canonical state and uncertainty
 
-Three timescales are separated.
+`Estimate[T]` distinguishes a known false/zero from no value. It contains:
 
-### Strategic policy
+- `value`, or an explicit `unavailable_reason`;
+- confidence;
+- monotonic observation and validity timestamps;
+- source, provenance, and optional source/model version;
+- computed valid, unknown, invalid, stale, or not-implemented status.
 
-Runs approximately 1–3 decisions per second and selects intents such as:
+`TemporalCombatState` is the only canonical policy-state source. It contains self and opponent
+combatant estimates, relative geometry, round state, temporal/quality metadata, and tracked
+`SceneEntity` estimates. Known action-phase names are supplied by `ActionPhase`, while the stored
+phase is a string estimate so future calibrated phases do not require a core rewrite.
 
-- pressure;
-- bait skill;
-- bait substitution;
-- defend;
-- retreat;
-- wait for cooldown;
-- punish;
-- escape;
-- finish combo;
-- save resources.
+Low-confidence, stale, invalid, or unavailable state must yield a neutral decision or rejection.
 
-### Tactical policy
+## Observation views
 
-Runs approximately 5–10 decisions per second and selects macro actions, target distance, approach direction, skill choice, continuation, or substitution.
+`ObservationViewBuilder` derives every view from the same `TemporalCombatState`:
 
-### Execution policy and scheduler
+- IR (`identity_rich`): exposes self and opponent identity only when each identity estimate is fresh
+  and above the configured confidence threshold;
+- SQ (`self_qualified`, default): exposes the configured self identity and never opponent identity;
+- IQ (`identity_quiet`): exposes neither identity.
 
-Runs at the control rate and converts a macro action into legal, timed movement and button events. It monitors hit confirmation, animation phase, interruption, timeout, and focus.
+Hidden identity keys are absent from serialized policy views; they are not serialized as null.
+Provenance/source strings are retained in dataset records but omitted from policy projections so an
+identity cannot leak through an adapter name. Every view has a schema version and view version.
 
-## Layer 5: Character skill system
+SQ is the default architectural choice because it permits character-conditioned execution while
+preserving a meaningful generalization test against unfamiliar opponents. IR and IQ are evaluation
+and ablation views, not separate perception stacks.
 
-General combat knowledge is shared. Character-specific knowledge lives in a `CharacterSpec` package:
+## Policy structure
 
-```text
-CharacterSpec
-├── identity and aliases
-├── visual templates
-├── enabled low-level actions
-├── skill definitions
-├── timing ranges
-├── animation phases
-├── legal transitions
-├── conditional combo graph
-├── preferred distance model
-├── character adapter reference
-└── evaluation rules
-```
+The intended policy structure is one shared temporal backbone, followed by character conditioning,
+a small character adapter, and factorized heads. The factorized output is:
 
-Character data must not be scattered through Python conditionals.
+- vertical intent: neutral/up/down;
+- horizontal intent: neutral/left/right;
+- skill intent: none, normal attack, generic skill slots, substitution, summon, or scroll;
+- optional skill direction;
+- hold duration, deadline, cancel condition, and confidence.
 
-## Layer 6: Lineup manager
+Vertical and horizontal factors compose into the existing nine-way `MovementDirection` only after
+the policy boundary. `LegacyControlAdapter` is a transitional semantic-to-`ControlCommand` bridge;
+it maps generic slots but contains no keyboard bindings or character mechanics.
 
-The lineup manager persists context across character changes:
+Strategic intent may be supplied as an auxiliary feature or head. It is not required to operate a
+separate strategic, tactical, and execution controller.
 
-- active character and round index;
-- previous round outcomes;
-- opponent style estimates;
-- observed substitution habits;
-- repeated opening actions;
-- risk and resource strategy for the next character.
+## Character capabilities and adapters
 
-This layer distinguishes a true three-character system from three unrelated policies.
+Shared knowledge covers temporal interaction patterns, distance, pressure, defense, and resource
+tradeoffs. Character-specific packages contain only configuration, perception templates, calibrated
+capabilities, semantic-to-generic-control adaptation, timing evidence, and small learned adapters or
+heads.
 
-## Layer 7: Learning system
+`ActionCapabilities` is time-bounded and versioned. It declares allowed factors and returns a mask
+plus rejection reasons. It can represent a temporary mechanics-changing state by issuing a short
+validity window and a different allowed set. It never infers or invents that state. The three current
+character files remain unverified and therefore do not authorize character mechanics.
 
-The learning pipeline is staged but shares one data contract:
+The platform must not create three independent perception-policy-runtime stacks.
 
-1. video representation pretraining;
-2. behavior cloning from synchronized demonstrations;
-3. inverse dynamics from labeled transitions;
-4. pseudo-action or latent-action learning from action-free videos;
-5. value learning from state-only trajectories;
-6. offline RL from accumulated transitions;
-7. limited closed-loop refinement;
-8. continual learning with regression evaluation.
+## Data and registries
 
-No single algorithm is assumed to remain permanent.
+Episode manifest schema V2 reserves versioned streams for perception estimates, canonical state,
+views, semantic actions, capabilities, masks/rejections, scheduler/safety decisions, and annotations.
+Each stream states valid, absent, not implemented, unknown, invalid, or stale as applicable. Existing
+V1 manifests remain readable.
 
-## Layer 8: World model
+`PolicyMetadata`, `OpponentMetadata`, and `DatasetMetadata` plus typed registries are catalog
+contracts only. HELT, PFSP, league sampling, self-play, and policy promotion algorithms are not
+implemented.
 
-A short-horizon model estimates:
+## Experimental modules outside runtime
 
-```text
-p(next_state, outcome | belief_state, macro_action)
-```
+World models, inverse dynamics, action-free video learning, online RL, self-play, and league training
+are future research candidates. A world model, if ever authorized, must live under learning and emit
+offline artifacts; it cannot become a prerequisite for capture, state construction, views, action
+legality, scheduling, or safety.
 
-Uses:
-
-- representation learning;
-- hit and outcome prediction;
-- short imagined rollouts;
-- tactical evaluation;
-- data-efficiency experiments.
-
-It is not treated as a perfect replacement for the real game because hidden state cannot be fully reconstructed from pixels.
-
-## Layer 9: Policy registry, opponent pool, and evaluation
-
-Every policy has:
-
-- immutable version ID;
-- training dataset version;
-- code commit;
-- configuration hash;
-- metrics;
-- supported characters;
-- inference requirements.
-
-The opponent pool may contain scripted opponents, fixed game AI conditions, historical policies, recorded behavior models, and consenting humans. A component is not called self-play unless both sides are actually controlled.
-
-## Cross-cutting contracts
-
-The minimum stable contracts are:
-
-- `FramePacket`;
-- `InputEvent`;
-- `PerceptionState`;
-- `BeliefState`;
-- `StrategicDecision`;
-- `MacroActionRequest`;
-- `ControlCommand`;
-- `PolicyOutput`;
-- `EpisodeManifest`;
-- `EpisodeTransition`.
-
-Model and backend replacements must preserve or version these contracts.
+The Shūkai paper motivates identity ablations, factorized actions, masks, and behavior evaluation.
+Its hidden client state, hitbox information, PPO results, deployment claims, and distributed league
+system are not transferable evidence for this screen-only project. Kihan is treated only as a
+perception-prototype reference; its direct PyAutoGUI path, hard-coded monolith, single-frame policy,
+and reward implementation are not adopted.
 
 ## Failure behavior
 
-Any of the following blocks live actions and releases held keys:
+On stale capture, invalid calibration, uncertain required state, expired capabilities, unsupported
+semantic action, lost focus, emergency stop, timeout, or excess action rate:
 
-- missing focus;
-- invalid calibration;
-- stale or frozen capture;
-- unrecognized active character when character-specific action is required;
-- policy timeout;
-- emergency stop;
-- explicit dry-run;
-- safety-gate failure.
-
-Low perception confidence produces neutral behavior or a separately calibrated safe fallback, never an aggressive guess.
+1. reject or choose neutral;
+2. release held keys when an input backend is involved;
+3. record the stage and reason when that V2 stream is implemented;
+4. require fresh evidence before resuming.

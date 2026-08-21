@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from typing import Protocol, runtime_checkable
 
+from naruto_agent.core.actions import SemanticAction
+from naruto_agent.core.combat_state import TemporalCombatState
 from naruto_agent.core.contracts import (
     BeliefState,
     ControlCommand,
@@ -10,6 +12,8 @@ from naruto_agent.core.contracts import (
     PerceptionState,
     PolicyOutput,
 )
+from naruto_agent.core.enums import CharacterId
+from naruto_agent.core.observations import ObservationView
 
 
 @runtime_checkable
@@ -57,4 +61,47 @@ class BeliefUpdater(Protocol):
 
 @runtime_checkable
 class Policy(Protocol):
+    """Legacy Work Order 001 policy boundary retained for compatibility."""
+
     def act(self, perception: PerceptionState, belief: BeliefState) -> PolicyOutput: ...
+
+
+@runtime_checkable
+class CharacterActionAdapter(Protocol):
+    """Maps semantic outputs to legacy control commands without exposing key bindings."""
+
+    def to_control_command(self, action: SemanticAction) -> ControlCommand: ...
+
+
+@runtime_checkable
+class TemporalStateEstimator(Protocol):
+    def update(self, frame: FramePacket) -> TemporalCombatState: ...
+
+
+@runtime_checkable
+class TemporalPolicy(Protocol):
+    def act(self, observation: ObservationView) -> SemanticAction: ...
+
+
+@runtime_checkable
+class SharedTemporalBackbone(Protocol):
+    def encode(self, observation: ObservationView) -> Mapping[str, tuple[float, ...]]: ...
+
+
+@runtime_checkable
+class CharacterConditioningAdapter(Protocol):
+    def condition(
+        self,
+        shared_features: Mapping[str, tuple[float, ...]],
+        character_id: CharacterId,
+    ) -> Mapping[str, tuple[float, ...]]: ...
+
+
+@runtime_checkable
+class FactorizedActionHeads(Protocol):
+    def predict(
+        self,
+        conditioned_features: Mapping[str, tuple[float, ...]],
+        *,
+        timestamp_ns: int,
+    ) -> SemanticAction: ...

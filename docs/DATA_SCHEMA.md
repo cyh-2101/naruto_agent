@@ -1,160 +1,128 @@
-# Data Schema
+# Data Schema V2
 
 ## Principles
 
-1. Raw data is immutable.
-2. Every event uses a monotonic nanosecond timestamp within a session.
-3. Human-readable metadata also stores UTC time.
-4. Raw, processed, and training-set layers are separate.
-5. Every derived artifact records source episode IDs, code commit, configuration hash, and processing version.
-6. Real, pseudo-labeled, and imagined transitions are never mixed without provenance.
+- Raw frames and user input records are immutable evidence.
+- Derived artifacts live in versioned datasets; they never overwrite raw recordings.
+- Runtime synchronization uses monotonic nanoseconds. Human metadata uses UTC.
+- Every estimate distinguishes known false/zero from unavailable, invalid, stale, or unknown.
+- Every model, policy, character config, calibration profile, view, and schema version is explicit
+  when known; absent metadata remains null.
+- V1 manifests stay readable. V2 does not reinterpret old data as newly available evidence.
 
-## Storage layout
+## Episode layout
 
-```text
-datasets/
-├── raw/
-│   ├── demonstrations/
-│   ├── agent_runs/
-│   └── imported_videos/
-├── processed/
-│   ├── perception_v1/
-│   ├── pseudo_actions_v1/
-│   └── latent_features_v1/
-└── training_sets/
-    └── <dataset_version>/
-```
-
-The repository ignores all dataset contents by default.
-
-## Episode directory
+The Foundation recorder currently writes:
 
 ```text
-<episode_id>/
-├── manifest.json
-├── video.mp4
-├── frame_index.jsonl
-├── input_events.jsonl
-├── actions.jsonl
-├── optional_annotations.jsonl
-├── optional_policy_events.jsonl
-└── optional_summary.json
+episodes/<episode_id>/
+  manifest.json
+  frame_index.jsonl
+  input_events.jsonl
+  actions.jsonl
+  frames/*.npy
 ```
 
-## Episode manifest
+The NumPy frames are a bounded fallback, not a production video claim. Checksums cover finalized
+files. Existing recovery and validation behavior remains unchanged.
 
-Required fields:
+## Manifest schema V2
 
-- `schema_version`;
-- `episode_id`;
-- `session_id`;
-- `source_type`: human demonstration, scripted agent, learned agent, or imported video;
-- `started_at_utc` and `ended_at_utc`;
-- `started_monotonic_ns` and `ended_monotonic_ns`;
-- `controlled_character`;
-- `lineup` and optional round boundaries;
-- `emulator_profile_id`;
-- `capture_config_hash`;
-- `control_config_hash`;
-- `character_config_hash`;
-- `code_commit`;
-- `model_version`, if applicable;
-- filenames and checksums;
-- quality flags;
-- free-form notes.
+`EpisodeManifest` accepts schema 1 or 2. New recordings use schema 2 and include optional:
 
-## Frame index event
+- model and policy versions;
+- calibration profile and character-config versions;
+- observation-view version;
+- `EpisodeStreamDescriptor` entries.
+
+Each stream descriptor has a role, its own schema version, a status, optional path, and reason. The
+implemented recorder marks raw frames, frame index, input events, and legacy control intervals as
+valid. It truthfully marks the reserved V2 runtime streams as not implemented:
+
+- perception estimates;
+- `TemporalCombatState`;
+- observation views;
+- semantic actions;
+- action capabilities;
+- action masks and rejection reasons;
+- scheduler and SafetyGate decisions;
+- annotations.
+
+The status vocabulary is `absent`, `not_implemented`, `unknown`, `invalid`, `stale`, and `valid`.
+`not_implemented` means the producer does not exist. `unknown` means the producer ran but could not
+obtain the value. These must never be collapsed.
+
+## Estimate record
+
+An `EstimateRecord` contains:
 
 ```json
 {
-  "schema_version": 1,
-  "frame_id": 12345,
-  "timestamp_ns": 817234900000,
-  "video_pts": 44100,
-  "duplicate": false,
-  "dropped_before": 0
+  "value": false,
+  "confidence": 0.93,
+  "observed_at_ns": 1000000000,
+  "valid_until_ns": 1100000000,
+  "source": "screen_adapter",
+  "provenance": "calibration-profile-id",
+  "source_version": "adapter-v1",
+  "unavailable_reason": null,
+  "status": "valid"
 }
 ```
 
-## Raw input event
+`false` and `0` are valid values. Missing values use null plus an unavailable reason. A value becomes
+stale when evaluated after `valid_until_ns`; source records are not rewritten.
 
-```json
-{
-  "schema_version": 1,
-  "timestamp_ns": 817234912345,
-  "device": "keyboard",
-  "key": "K",
-  "event_type": "down",
-  "source": "human"
-}
-```
+## Canonical state record
 
-## Derived action event
+`TemporalCombatState.to_record()` serializes:
 
-A derived action represents the full control state, not only button edges.
+- schema/timestamp/sequence metadata;
+- self and opponent identity, health, energy, position, velocity, action phase, substitution and
+  named skill-readiness estimates;
+- relative delta, distance, distance bucket, and screen-edge relation;
+- round phase/timer/outcome;
+- tracked scene entities with type, owner, position, velocity, and lifetime;
+- frame freshness, duplicate/drop, and aggregate confidence quality metadata.
 
-```json
-{
-  "schema_version": 1,
-  "start_ns": 817234912345,
-  "end_ns": 817235042345,
-  "movement": "up_right",
-  "button": "skill_1",
-  "character_id": "taka_sasuke",
-  "source": "human",
-  "confidence": 1.0
-}
-```
+The contract can represent all fields as unavailable. It does not manufacture perception.
 
-## Perception event
+## Policy-view records
 
-Every field that may be uncertain has a confidence value or an explicit unknown state.
+`ObservationViewRecord` stores view type, schema version, view version, timestamp, and policy payload.
+IR/SQ/IQ are projections of the same state. Hidden identity keys must be absent in serialized SQ/IQ
+payloads. Dataset evidence may retain provenance outside the policy payload.
 
-```json
-{
-  "schema_version": 1,
-  "timestamp_ns": 817235000000,
-  "self_position": {"x": 0.32, "y": 0.71},
-  "opponent_position": {"x": 0.68, "y": 0.65},
-  "self_health": 0.84,
-  "opponent_health": 0.61,
-  "active_character": "taka_sasuke",
-  "self_animation": "attacking",
-  "opponent_animation": "moving",
-  "round_phase": "active",
-  "confidence": {
-    "positions": 0.87,
-    "health": 0.96,
-    "active_character": 0.99
-  }
-}
-```
+## Action and decision records
 
-## Episode transition
+Typed V2 records exist for:
 
-Training transitions may reference raw frames rather than duplicate images.
+- factorized `SemanticActionRecord`;
+- `ActionCapabilitiesRecord` with a time-bounded allowed set;
+- `ActionMaskRecord` with per-factor booleans and reasons;
+- `DispatchDecisionRecord` for scheduler or SafetyGate decisions.
 
-Required provenance:
+The legacy `ControlStateInterval` remains for Work Order 001 compatibility. It is downstream of
+semantic adaptation and must not become a policy output again.
 
-- source episode and frame range;
-- real, pseudo-labeled, or imagined;
-- observation version;
-- action-label version;
-- reward version;
-- terminal and truncation reason;
-- confidence and quality flags.
+`EpisodeRuntimeEvent` is a versioned envelope for future optional payload streams. A valid event
+requires a payload; a not-implemented event requires a reason.
 
-## Dataset split policy
+## Metadata registries
 
-- Split by episode or session, never randomly by frame.
-- Keep all frames from one match in the same split.
-- Maintain a fixed holdout containing different sessions and opponent conditions.
-- Track per-character and cross-character distribution.
-- Imported videos must not leak near-duplicate clips across splits.
+`DatasetMetadata`, `PolicyMetadata`, and `OpponentMetadata` record immutable identity/version,
+provenance, supported characters, view type, training method, status, and related artifacts. The
+in-memory typed registries reject duplicate keys. They do not implement training, league sampling,
+promotion, or deployment.
 
-## Retention and privacy
+## Dataset lifecycle
 
-- Raw data remains local unless the user explicitly exports it.
-- Do not record unrelated desktop regions.
-- Provide future tooling to redact names, notifications, and account identifiers.
-- Imported content must be user-supplied or legally usable.
+1. Record raw episode evidence.
+2. Finalize and checksum it.
+3. Validate timestamps, counts, schema, and checksums.
+4. Create a versioned derived dataset with source episode IDs.
+5. Split by episode/session/opponent conditions, never by adjacent frame.
+6. Record annotation source and inter-rater or review evidence.
+7. Register a candidate; require a separate Product Owner promotion decision.
+
+Do not commit episodes, frames, videos, credentials, model checkpoints, or local calibration data.

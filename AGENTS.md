@@ -51,12 +51,24 @@ All live input code must default to dry-run. Real input requires an explicit com
 10. No feature is described as working until the relevant test or live verification is recorded.
 11. Replacing a model must not require rewriting the runtime or data layer.
 12. Development proceeds as capability slices inside the final architecture, not throwaway MVPs.
+13. `TemporalCombatState` is the canonical screen-derived state. Policies receive only a versioned
+    IR, SQ, or IQ projection built from that one state.
+14. V2 policy output is `SemanticAction`; character adapters and `ActionCapabilities` resolve it
+    before the existing scheduler and safety gate. Policies never receive key bindings.
+15. Strategic intent is optional auxiliary context, not a mandatory three-controller hierarchy.
+16. World models, league training, and opponent sampling algorithms remain experimental learning
+    modules outside the approved runtime path until separately authorized.
 
 ## Current development policy
 
-The active task is `docs/CODEX_WORK_ORDER_001.md`. Do not start raw-pixel PPO, online reinforcement learning, self-play, a world model, or unlabeled-video pseudo-labeling during Work Order 001.
+Work Order 001 is complete and remains the verified runtime/recording foundation. The Architecture
+V2 contract refactor defines the approved future path without adding gameplay autonomy.
 
-The first slice must create reliable contracts, configuration loading, safe runtime interfaces, diagnostics, recording schemas, and tests. It must leave extension points for the full architecture.
+`docs/CODEX_WORK_ORDER_002.md` is the next proposed work order and must not start without explicit
+Product Owner authorization. It is passive-only: native capture validation, calibration, user-owned
+demonstration recording, screen-derived estimates/state/views, offline/manual evaluation, and
+dataset validation. Do not start generated gameplay input, behavior cloning, PPO, online
+reinforcement learning, self-play, a world model, HELT/PFSP, or pseudo-labeling in Work Order 002.
 
 ## Engineering standards
 

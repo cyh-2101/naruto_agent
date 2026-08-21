@@ -35,9 +35,10 @@ needed.
 
 ## ADR-005 — Hierarchical decisions and mandatory action scheduler
 
-- Status: accepted
-- Decision: Separate strategic intent, tactical macro action, and low-level timed execution. No
-  policy sends keys directly.
+- Status: partially superseded by ADR-015
+- Decision: The mandatory action scheduler and no-direct-key rule remain accepted. The requirement
+  for separate strategic, tactical, and execution controllers is superseded; strategic intent is an
+  optional auxiliary signal.
 - Reason: Reduces action-space complexity and centralizes safety, timing, and legal transitions.
 
 ## ADR-006 — Demonstrations before online reinforcement learning
@@ -46,6 +47,8 @@ needed.
 - Decision: Start learned control from synchronized human demonstrations; use online interaction
   later for closed-loop correction.
 - Reason: Emulator interaction is slow, and random raw-pixel exploration is inefficient.
+- Clarification: This records a possible ordering only. It does not authorize demonstrations,
+  behavior cloning, or online learning; each requires a later work order and acceptance gate.
 
 ## ADR-007 — Raw data is immutable and provenance is mandatory
 
@@ -122,3 +125,17 @@ needed.
   remain reproducible and mechanics must not be inferred from placeholders.
 - Rejected: committing personal profiles, modifying `emulator.example.yaml`, and auto-marking a CLI
   generated profile as verified.
+
+## ADR-015 — Screen-only policy architecture V2
+
+- Status: accepted for architecture and contracts
+- Decision: Use one `TemporalCombatState`, versioned IR/SQ/IQ views with SQ default, one shared
+  temporal backbone, character conditioning/adapters, factorized `SemanticAction`, time-bounded
+  `ActionCapabilities`, then the mandatory scheduler and SafetyGate.
+- Reason: Makes uncertainty, identity generalization, action legality, character sharing, and safety
+  explicit without depending on client-internal state or binding a model to keys.
+- Compatibility: Work Order 001 contracts remain operational; `ControlCommand` is a transitional
+  downstream contract, not the target policy output.
+- Boundary: Registries and behavior profiles are metadata only. World models, HELT/PFSP, self-play,
+  and all learning remain outside runtime and require separate authorization.
+- Full record: `docs/adr/ADR_015_SCREEN_ONLY_POLICY_ARCHITECTURE.md`.
