@@ -171,6 +171,46 @@ Append entries. Do not delete failed runs.
 - Next action: Product Owner review of the passive-only Work Order 002; do not start it or any
   learning/input work without explicit authorization.
 
+## EXP-20260822-001 — Remove IQ and adopt IR-primary/SQ-fallback views
+
+- Goal: remove the identity-free IQ view and align the current architecture with the Product Owner's
+  maximum-performance objective while retaining a robust identity-unavailable path.
+- Baseline commit: `0e9e940` on branch `architecture/v2-screen-only-policy`.
+- Environment: Windows PowerShell, Python 3.12.13 virtual environment; no emulator interaction.
+- Commands:
+  - `rg` inventory of IQ/`identity_quiet` references across source, tests, and documentation;
+  - `.\.venv\Scripts\python.exe -m pytest -ra`;
+  - `.\.venv\Scripts\python.exe -m ruff check .`;
+  - `.\.venv\Scripts\python.exe -m compileall -q src tests scripts`;
+  - `.\.venv\Scripts\python.exe -m mypy src\naruto_agent`;
+  - `.\.venv\Scripts\python.exe -m mypy --python-version 3.12
+    src\naruto_agent\core\observations.py`;
+  - `git diff --check` and scoped status/diff audits.
+- Results:
+  - removed `ObservationViewType.IDENTITY_QUIET` and the builder IQ branch;
+  - current enum and tests support only IR and SQ;
+  - IR is documented as primary when opponent identity is fresh/confident;
+  - SQ is documented as fallback for unknown, stale, low-confidence, or conflicting identity and as
+    a future identity-dropout training view;
+  - safe suite: `64 passed in 1.10s`;
+  - Ruff and bytecode compilation passed;
+  - targeted Python 3.12 mypy for the changed observation module passed;
+  - `git diff --check` passed.
+- Failures or anomalies:
+  - automatic IR-to-SQ selection remains intentionally unimplemented because no passive identity
+    estimator has measured confidence/freshness calibration;
+  - full-package mypy failed with five pre-analysis dependency/target errors: missing `types-psutil`,
+    missing optional `torch`, and NumPy 2.5.2 stub syntax incompatible with the configured Python
+    3.11 target. No ignore rule or weakened configuration was added;
+  - pre-existing untracked `docs.zip` was present at session start and was preserved, not inspected,
+    modified, deleted, or staged.
+- Artifacts: source/test/documentation changes and ADR-016 only; no data, capture, calibration,
+  model, checkpoint, credential, or input artifact.
+- Interpretation: removing reliable identity cannot improve the theoretical information ceiling;
+  robustness will use SQ fallback, identity dropout, and missing/corrupted-identity evaluation.
+- Next action: after explicit Work Order 002 authorization, measure passive identity quality and
+  implement a reason-recording IR/SQ resolver. Do not train or send generated input.
+
 ## Entry template
 
 ### EXP-YYYYMMDD-NNN — Title

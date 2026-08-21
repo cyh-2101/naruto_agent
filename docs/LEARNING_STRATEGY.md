@@ -19,7 +19,8 @@ model in the approved runtime.
 
 1. Passive temporal representation and perception evaluation.
 2. User-operated demonstration collection and dataset acceptance.
-3. Offline behavior-cloning baselines with SQ default and IR/IQ ablations.
+3. Offline behavior-cloning baselines with IR as the full-information view, SQ identity dropout, and
+   reliable SQ fallback behavior.
 4. Shared-backbone versus justified adapter/head baselines.
 5. Only if separately authorized, offline improvement or action-free-video experiments.
 6. Only after much later safety and Product Owner gates, bounded live-input research.
@@ -38,11 +39,12 @@ versioned ObservationView -> shared temporal backbone -> character conditioning
 Strategic intent is optional auxiliary context or an auxiliary prediction head. It is not a required
 three-controller hierarchy. Models never learn key bindings.
 
-## Identity-ablation plan
+## Identity robustness plan
 
-IR, SQ, and IQ are controlled views from one state and one dataset lineage. Compare them on held-out
-episodes and unfamiliar-opponent conditions. Identity fields and provenance must be audited for
-leakage before attributing any performance difference to identity conditioning.
+IR and SQ are controlled views from one state and one dataset lineage. IR is the primary candidate;
+SQ is used for opponent-identity dropout during future training and for runtime fallback. Compare
+them on held-out episodes, unfamiliar opponents, missing identity, and deliberately corrupted
+identity. Audit SQ for identity leakage before attributing differences to conditioning.
 
 ## Registries are not leagues
 

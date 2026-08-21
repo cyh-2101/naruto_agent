@@ -5,6 +5,10 @@
 适用项目：`naruto_agent`
 论文：[Advancing DRL Agents in Commercial Fighting Games: Training, Integration, and Agent-Human Alignment](https://arxiv.org/abs/2406.01103)（ICML 2024）
 本地 PDF：`D:\projects\kihan\arxiv-2406.01103.pdf`
+
+> 2026-08-22 决策更新：本笔记曾把 IQ 作为候选消融视图。ADR-016 已否决并从当前代码/架构
+> 移除 IQ；当前只保留 IR 主模式和 SQ 身份不可靠时的降级模式。下文 IQ 内容保留为历史研究
+> 过程，不代表当前设计。
 PDF SHA-256：`85E1807D09F018EC21BD3C389AE25B572F4E90FAAF3199D9B0271CC3BE35B5A6`
 
 ## 1. 先给结论

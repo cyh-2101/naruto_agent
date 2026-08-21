@@ -1,8 +1,11 @@
 # ADR-015 — Screen-Only Policy Architecture V2
 
-- Status: accepted for architecture and contracts
+- Status: partially superseded by ADR-016 on 2026-08-22
 - Date: 2026-08-21
 - Scope: runtime/policy/data boundaries; no learning or live gameplay authorization
+
+ADR-016 removes IQ and changes view routing to IR primary with SQ fallback. The IR/SQ/IQ text below
+is retained as the historical decision record for this architecture checkpoint.
 
 ## Context
 

@@ -10,7 +10,7 @@ Status: implementation and safe synthetic verification complete.
 - configuration, window discovery, mock/native capture boundaries, dry-run/native input factories;
 - scheduler, SafetyGate, emergency-stop interfaces, calibration profiles;
 - immutable bounded recorder, validation, recovery, and mock vertical loop;
-- `Estimate[T]`, `TemporalCombatState`, `SceneEntity`, IR/SQ/IQ views;
+- `Estimate[T]`, `TemporalCombatState`, `SceneEntity`, and IR/SQ views;
 - factorized `SemanticAction`, `ActionCapabilities`, semantic dispatcher;
 - V2 episode stream contracts, metadata registries, and `BehaviorProfile`;
 - V1 manifest readability and V2 schema tests.
@@ -25,7 +25,9 @@ Requires explicit Product Owner authorization. No generated input.
 - create local calibration evidence;
 - record user-operated demonstrations;
 - implement passive perception adapters for a narrow labeled subset;
-- populate `Estimate[T]`, `TemporalCombatState`, SceneEntity, and IR/SQ/IQ records;
+- populate `Estimate[T]`, `TemporalCombatState`, SceneEntity, and IR/SQ records;
+- measure identity confidence/freshness/conflicts before implementing a reason-recording IR-primary,
+  SQ-fallback resolver;
 - measure confidence/freshness, serialization leakage, timestamp alignment, and dataset validity;
 - use offline/manual evaluation only.
 
@@ -47,7 +49,7 @@ No unverified timings or mechanics may be filled from memory or guesswork.
 Future authorization required after Capability 1 dataset acceptance.
 
 - behavior cloning baselines on immutable user demonstrations;
-- shared temporal backbone with SQ default and IR/IQ ablations;
+- shared temporal backbone with IR primary, SQ identity dropout, and SQ fallback evaluation;
 - factorized heads, legality metrics, calibration, held-out episodes, and cross-character tests;
 - candidates remain unpromoted and cannot send live input.
 

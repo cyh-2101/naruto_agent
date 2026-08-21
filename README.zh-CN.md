@@ -7,13 +7,13 @@ Architecture V2 契约；它还没有可用的游戏感知、角色机制、训�
 ## V2 核心流程
 
 ```text
-截屏 -> 被动感知 -> TemporalCombatState -> IR / SQ（默认）/ IQ
+截屏 -> 被动感知 -> TemporalCombatState -> IR（主模式）/ SQ（降级模式）
 -> 共享时序骨干 -> 角色适配 -> SemanticAction
 -> ActionCapabilities -> ActionScheduler -> SafetyGate -> 输入后端
 ```
 
 - `Estimate[T]` 记录值、置信度、新鲜度、来源和无法获取的原因；
-- IR 可以在证据足够时使用双方身份，SQ 只保留我方身份，IQ 隐藏双方身份；
+- IR 在对手身份可靠时使用双方身份，SQ 在身份未知或不可靠时只保留我方身份；
 - 策略只输出上下、左右、技能、方向、持续时间等语义，不知道键盘绑定；
 - 动作能力判断不能绕过 scheduler 和 SafetyGate；
 - 三个角色共享同一个时序架构，只保留各自的小型适配器、模板和已校准能力；

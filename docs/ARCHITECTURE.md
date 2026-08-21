@@ -19,7 +19,7 @@ Emulator
   -> Perception Adapters
   -> TemporalCombatState
   -> Belief / Temporal Encoder
-  -> ObservationViewBuilder -> IR | SQ (default) | IQ
+  -> ObservationViewBuilder -> IR (primary) | SQ (fallback)
   -> Shared Temporal Backbone
   -> Character Conditioning / Adapter
   -> Factorized Semantic Action Heads
@@ -75,20 +75,46 @@ Low-confidence, stale, invalid, or unavailable state must yield a neutral decisi
 
 ## Observation views
 
-`ObservationViewBuilder` derives every view from the same `TemporalCombatState`:
+`ObservationViewBuilder` derives both views from the same `TemporalCombatState`:
 
 - IR (`identity_rich`): exposes self and opponent identity only when each identity estimate is fresh
   and above the configured confidence threshold;
-- SQ (`self_qualified`, default): exposes the configured self identity and never opponent identity;
-- IQ (`identity_quiet`): exposes neither identity.
+- SQ (`self_qualified`): exposes the configured self identity and never opponent identity.
 
-Hidden identity keys are absent from serialized policy views; they are not serialized as null.
-Provenance/source strings are retained in dataset records but omitted from policy projections so an
-identity cannot leak through an adapter name. Every view has a schema version and view version.
+Hidden opponent-identity keys are absent from serialized SQ policy views; they are not serialized as
+null. Provenance/source strings are retained in dataset records but omitted from policy projections
+so identity cannot leak through an adapter name. Every view has a schema version and view version.
 
-SQ is the default architectural choice because it permits character-conditioned execution while
-preserving a meaningful generalization test against unfamiliar opponents. IR and IQ are evaluation
-and ablation views, not separate perception stacks.
+IR is the primary performance view because reliable legal information should not be discarded. SQ
+is the runtime fallback when opponent identity is unknown, stale, or below threshold. In future
+learning work, SQ also supports identity dropout so the shared backbone must understand visible
+behavior instead of relying only on a character name. Both views share perception and policy
+weights; they are not separate stacks.
+
+The view resolver is future runtime work. The implemented builder currently constructs a requested
+IR or SQ view and enforces its serialization boundary; it does not yet select views automatically.
+
+## Implementation sequence and gates
+
+1. **Current verified contracts:** preserve Work Order 001, `Estimate`, canonical state, explicit
+   IR/SQ building, semantic actions, capabilities, scheduler/safety, and episode V2.
+2. **Authorized passive Work Order 002:** validate capture/calibration, record user-operated data,
+   measure identity/health/position estimates, populate state and both views, and evaluate missing,
+   stale, low-confidence, and conflicting identity. No generated input or learning.
+3. **View resolver after evidence:** select IR when the opponent identity estimate is usable;
+   otherwise select SQ, and record the selected view plus reason. Thresholds come from measured
+   calibration, not guesses.
+4. **Separately authorized offline policy work:** train one shared temporal backbone primarily with
+   IR while applying opponent-identity dropout to produce SQ robustness. Compare full, missing, and
+   corrupted identity conditions. Candidate models remain unable to send input.
+5. **Character integration:** add only evidence-backed capabilities and small adapters/heads for
+   each character; keep semantic output and runtime/data contracts unchanged.
+6. **Dry-run/shadow evaluation:** run policy decisions through capabilities, adapter, scheduler, and
+   SafetyGate with input disabled; measure legality, latency, confidence, and fallback behavior.
+7. **Future bounded input gate:** only a new explicit authorization may test real input in training
+   mode after calibration, focus, emergency stop, recording, and failure recovery are verified.
+
+Each step stops at its own Product Owner gate. Later steps are not authorized by this architecture.
 
 ## Policy structure
 

@@ -32,9 +32,9 @@ No passive game accuracy has been measured yet.
 
 - IR identity threshold behavior;
 - SQ opponent-ID absence and configured self-ID presence;
-- IQ absence of both IDs;
 - serialized key/value/provenance leakage audit;
-- identical source state and dataset lineage across view comparisons.
+- identical source state and dataset lineage across view comparisons;
+- IR-to-SQ fallback correctness for unknown, stale, low-confidence, and conflicting identity.
 
 Current evidence: synthetic contract and serialization tests only.
 
@@ -64,7 +64,8 @@ Only after explicit authorization and dataset acceptance:
 
 - held-out imitation metrics and temporal baselines;
 - legality and calibration, not just action accuracy;
-- familiar/unfamiliar opponent conditions for IR/SQ/IQ;
+- familiar/unfamiliar opponent conditions for IR and SQ;
+- identity-available, identity-missing, and identity-corrupted conditions;
 - shared-backbone versus justified alternatives;
 - competence, behavior profile fit, robustness, fairness, and safety as separate axes.
 

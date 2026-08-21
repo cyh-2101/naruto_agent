@@ -199,6 +199,11 @@ screen perception or a gameplay policy. New recordings use manifest schema V2 an
 streams as `not_implemented`; do not change those statuses until a producer actually writes and
 validates the stream.
 
+The supported policy views are IR and SQ. IR is the intended primary path when opponent identity is
+fresh and sufficiently confident; SQ is the fallback when it is not. The builder currently requires
+an explicit view choice. Do not invent identity thresholds or claim automatic fallback before Work
+Order 002 measures a passive identity estimator and records selection reasons.
+
 ## 9. Episode recovery
 
 Normal, abort, injected-exception, and process-exit paths finalize the manifest. If a hard crash leaves

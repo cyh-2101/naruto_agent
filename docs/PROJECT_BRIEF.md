@@ -14,8 +14,8 @@ and later separately authorized learning.
 ## Research questions
 
 - Can visible pixels support useful, confidence-calibrated temporal combat state?
-- Does SQ, which knows self identity but hides opponent identity, generalize better than IR while
-  retaining useful character conditioning?
+- Can IR use reliable opponent identity for maximum performance while SQ provides a robust fallback
+  when that identity is unknown, stale, or low-confidence?
 - Does a shared temporal backbone plus small character adapters outperform separate full stacks?
 - Do factorized semantic actions and explicit capability masks improve legality and auditability?
 - Can behavior style be evaluated independently from competence and runtime safety?
@@ -25,7 +25,7 @@ and later separately authorized learning.
 The approved runtime is:
 
 ```text
-screen capture -> perception estimates -> TemporalCombatState -> IR/SQ/IQ
+screen capture -> perception estimates -> TemporalCombatState -> IR primary / SQ fallback
 -> shared temporal backbone -> character conditioning -> factorized SemanticAction
 -> ActionCapabilities -> adapter -> scheduler -> SafetyGate -> input
 ```

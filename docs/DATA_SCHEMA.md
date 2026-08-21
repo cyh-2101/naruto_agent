@@ -90,8 +90,9 @@ The contract can represent all fields as unavailable. It does not manufacture pe
 ## Policy-view records
 
 `ObservationViewRecord` stores view type, schema version, view version, timestamp, and policy payload.
-IR/SQ/IQ are projections of the same state. Hidden identity keys must be absent in serialized SQ/IQ
-payloads. Dataset evidence may retain provenance outside the policy payload.
+IR and SQ are projections of the same state. Hidden opponent-identity keys must be absent in
+serialized SQ payloads. Dataset evidence may retain provenance outside the policy payload. Future
+records must also state why IR or SQ was selected, once automatic view resolution exists.
 
 ## Action and decision records
 

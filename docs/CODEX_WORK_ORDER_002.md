@@ -12,7 +12,7 @@ practice while Naruto Agent input remains disabled.
 
 Validate native screen capture and local calibration, record a small user-operated demonstration,
 and implement the first passive screen-derived estimates, `TemporalCombatState`, scene-entity schema,
-and IR/SQ/IQ views with offline/manual evaluation and dataset validation.
+and IR/SQ views with offline/manual evaluation and dataset validation.
 
 The result must populate Architecture V2 contracts without weakening the Work Order 001 runtime,
 recorder, or safety boundary.
@@ -74,14 +74,18 @@ Unsupported fields remain `not_implemented`; occluded or unreadable observations
 - otherwise keep the stream/schema present and values explicitly unavailable;
 - add no fake projectile, summon, trap, or area-effect detector.
 
-### 6. IR/SQ/IQ views
+### 6. IR/SQ views
 
-- build all three views from the same canonical state;
-- keep SQ as default;
+- build both views from the same canonical state;
+- treat IR as primary when opponent identity is fresh and sufficiently confident;
+- treat SQ as fallback when opponent identity is unknown, stale, low-confidence, or conflicting;
 - enforce identity confidence/freshness in IR;
-- verify SQ never serializes opponent ID and IQ serializes neither ID;
+- verify SQ never serializes opponent ID;
 - audit keys, values, provenance, adapter names, and nested payloads for identity leakage;
 - version the view builder and stored view records.
+
+Implement and test view-selection reasons only after passive identity estimates have measured
+confidence/freshness behavior. Do not fabricate a resolver from synthetic identity quality.
 
 ### 7. Episode V2 integration
 
@@ -108,7 +112,7 @@ Add safe tests for:
 - native code paths through mocks and synthetic frames;
 - estimate confidence, expiry, unknown/invalid/not-implemented distinctions;
 - state sequence and scene-entity serialization;
-- IR/SQ/IQ identity and nested serialization leakage;
+- IR/SQ identity, fallback reasons, and nested serialization leakage;
 - episode stream population and missing-stream truthfulness;
 - raw immutability, timestamp ordering, V1 compatibility, and no-live-input behavior;
 - failure paths for ambiguous window, stale frames, bad calibration, and corrupt datasets.
@@ -138,7 +142,7 @@ Work Order 002 can be technically complete only when:
 2. calibration and user recording are local, versioned, bounded, private, and validated;
 3. implemented estimates have reviewed ground truth and measured errors;
 4. unsupported fields remain explicitly unavailable;
-5. one state produces leak-audited IR/SQ/IQ records;
+5. one state produces leak-audited IR/SQ records, with measured evidence for any automatic fallback;
 6. V2 episode streams, checksums, timestamps, and V1 compatibility pass;
 7. every safe automated test passes and no test sends live input;
 8. documentation claims match artifacts;

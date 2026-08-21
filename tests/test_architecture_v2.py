@@ -106,24 +106,22 @@ def test_strategic_intent_is_optional_in_legacy_policy_output() -> None:
     assert output.strategic is None
 
 
-def test_observation_views_enforce_identity_boundaries_in_serialization() -> None:
+def test_ir_and_sq_enforce_identity_boundaries_in_serialization() -> None:
     now = time.monotonic_ns()
     builder = ObservationViewBuilder(configured_self_id=CharacterId.TAKA_SASUKE)
     state = _state(now)
 
     ir = builder.build(state, ObservationViewType.IDENTITY_RICH)
     sq = builder.build(state, ObservationViewType.SELF_QUALIFIED)
-    iq = builder.build(state, ObservationViewType.IDENTITY_QUIET)
-
     assert ir.self_features["character_id"] == CharacterId.TAKA_SASUKE.value
     assert ir.opponent_features["character_id"] == CharacterId.WHITE_MASK.value
     assert sq.self_features["character_id"] == CharacterId.TAKA_SASUKE.value
     assert "character_id" not in sq.opponent_features
-    assert "character_id" not in iq.self_features
-    assert "character_id" not in iq.opponent_features
     assert CharacterId.WHITE_MASK.value not in sq.to_json()
-    assert CharacterId.TAKA_SASUKE.value not in iq.to_json()
-    assert CharacterId.WHITE_MASK.value not in iq.to_json()
+    assert list(ObservationViewType) == [
+        ObservationViewType.IDENTITY_RICH,
+        ObservationViewType.SELF_QUALIFIED,
+    ]
 
 
 def test_ir_omits_low_confidence_identity() -> None:

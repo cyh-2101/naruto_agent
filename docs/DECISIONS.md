@@ -128,7 +128,7 @@ needed.
 
 ## ADR-015 — Screen-only policy architecture V2
 
-- Status: accepted for architecture and contracts
+- Status: partially superseded by ADR-016
 - Decision: Use one `TemporalCombatState`, versioned IR/SQ/IQ views with SQ default, one shared
   temporal backbone, character conditioning/adapters, factorized `SemanticAction`, time-bounded
   `ActionCapabilities`, then the mandatory scheduler and SafetyGate.
@@ -139,3 +139,18 @@ needed.
 - Boundary: Registries and behavior profiles are metadata only. World models, HELT/PFSP, self-play,
   and all learning remain outside runtime and require separate authorization.
 - Full record: `docs/adr/ADR_015_SCREEN_ONLY_POLICY_ARCHITECTURE.md`.
+
+## ADR-016 — IR primary with SQ fallback; remove IQ
+
+- Status: accepted
+- Decision: The supported observation views are IR and SQ only. IR is the primary performance view
+  when opponent identity is fresh and sufficiently confident. SQ is the fallback for missing,
+  stale, low-confidence, or conflicting opponent identity and a future identity-dropout training
+  view. IQ is removed from code and current architecture.
+- Reason: With equally accurate inputs and training, discarding reliable self and opponent identity
+  cannot improve the theoretical performance ceiling. Robustness should come from SQ fallback,
+  identity dropout, corrupted-identity evaluation, and behavior features—not a permanent
+  identity-free deployment view.
+- Boundary: Automatic view resolution remains unimplemented until passive identity confidence and
+  freshness are measured in an authorized Work Order 002.
+- Full record: `docs/adr/ADR_016_IR_PRIMARY_SQ_FALLBACK.md`.

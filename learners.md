@@ -142,7 +142,7 @@ python scripts/episode.py validate "<episode-directory>"
 
 - 用 `Estimate[T]` 区分“值为 0/false”和“根本不知道”；
 - 用一个 `TemporalCombatState` 保存双方、相对位置、回合和场景实体的时序状态；
-- 从同一个状态生成 IR、SQ、IQ 三种身份视图，默认使用 SQ；
+- 从同一个状态生成 IR、SQ 两种身份视图；IR 是主模式，SQ 是身份不可靠时的降级模式；
 - 策略以后输出 `SemanticAction`，不再直接理解按键；
 - 用 `ActionCapabilities` 判断角色此刻能不能做某动作，再经过 scheduler 和 SafetyGate；
 - Episode V2 会明确记录某条数据流是 valid、unknown、stale 还是 not implemented。
@@ -150,7 +150,7 @@ python scripts/episode.py validate "<episode-directory>"
 ### 必须理解的数据流
 
 ```text
-画面 -> 被动感知 -> TemporalCombatState -> IR/SQ/IQ
+画面 -> 被动感知 -> TemporalCombatState -> IR（主）/SQ（降级）
 -> 共享时序骨干 -> 角色适配 -> SemanticAction
 -> ActionCapabilities -> 角色动作适配
 -> ActionScheduler -> SafetyGate -> InputBackend
@@ -158,13 +158,13 @@ python scripts/episode.py validate "<episode-directory>"
 
 其中从“被动感知”到“共享时序骨干”目前只有契约，没有可用游戏模型。
 
-### 三种视图
+### 两种视图
 
-- IR：置信度和新鲜度足够时，可以看到双方身份；
-- SQ（默认）：只知道我方配置身份，不暴露对手身份；
-- IQ：双方身份都隐藏。
+- IR：对手身份置信度和新鲜度足够时，使用双方身份，追求最高信息利用率；
+- SQ：对手身份未知、过期、低置信度或冲突时，只知道我方配置身份。
 
-隐藏身份时，序列化结果里连字段都不存在，不是写成 `null`。
+SQ 隐藏对手身份时，序列化结果里连对手身份字段都不存在，不是写成 `null`。未来训练可
+随机隐藏对手身份，让共享大脑不能只靠角色名字，但最终运行在身份可靠时仍优先 IR。
 
 ### 能力和安全为什么分开
 
@@ -193,8 +193,8 @@ python scripts/episode.py validate "<episode-directory>"
 ### 学完后应能回答
 
 1. `Estimate(False)` 与 unavailable 有什么区别？
-2. 为什么 IR/SQ/IQ 必须来自同一个状态？
-3. SQ 默认视图隐藏了什么、保留了什么？
+2. 为什么 IR/SQ 必须来自同一个状态？
+3. 什么时候用 IR，什么时候降级到 SQ？
 4. `SemanticAction` 怎样到达输入后端？
 5. `ActionCapabilities` 与 `SafetyGate` 各负责什么？
 6. 64 个测试证明了什么，又没有证明什么？

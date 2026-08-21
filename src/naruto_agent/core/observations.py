@@ -14,7 +14,6 @@ from naruto_agent.core.estimates import Estimate
 class ObservationViewType(StrEnum):
     IDENTITY_RICH = "ir"
     SELF_QUALIFIED = "sq"
-    IDENTITY_QUIET = "iq"
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,7 +46,7 @@ class ObservationView:
 
 
 class ObservationViewBuilder:
-    """Build IR/SQ/IQ views from one state without duplicating perception."""
+    """Build IR or SQ views from one state without duplicating perception."""
 
     def __init__(
         self,
@@ -78,7 +77,7 @@ class ObservationViewBuilder:
             )
         elif view_type is ObservationViewType.SELF_QUALIFIED:
             self_features["character_id"] = self._configured_self_id.value
-        elif view_type is not ObservationViewType.IDENTITY_QUIET:
+        else:
             raise ValueError(f"unsupported observation view: {view_type}")
 
         relative = {

@@ -24,15 +24,16 @@ indicator. No current work order authorizes generated gameplay input.
 
 ```text
 Frame Capture -> Perception Adapters -> TemporalCombatState
--> ObservationViewBuilder (IR | SQ default | IQ)
+-> ObservationViewBuilder (IR primary | SQ fallback)
 -> Shared Temporal Backbone -> Character Conditioning / Adapter
 -> Factorized SemanticAction -> ActionCapabilities / mask
 -> CharacterActionAdapter -> ActionScheduler -> SafetyGate -> InputBackend
 ```
 
 `Estimate[T]` makes confidence, freshness, provenance, and unavailable values explicit. Policies
-never see key bindings. SQ exposes configured self identity but hides opponent identity; IQ hides
-both; IR exposes only fresh, sufficiently confident identities.
+never see key bindings. IR uses both identities only when opponent identity is fresh and sufficiently
+confident. SQ keeps configured self identity but hides opponent identity, providing a safe fallback
+and a future identity-dropout training view.
 
 Recorders and dataset/policy/opponent/evaluation registries are side systems. Learning jobs and world
 models, if ever authorized, remain outside runtime and cannot bypass scheduler or safety.
@@ -45,7 +46,7 @@ models, if ever authorized, remain outside runtime and cannot bypass scheduler o
 - scheduler, SafetyGate, emergency-stop/focus/rate failure behavior;
 - local ignored calibration profiles;
 - immutable bounded episode recorder, checksums, validation, recovery, and mock demo;
-- `Estimate`, `TemporalCombatState`, `SceneEntity`, IR/SQ/IQ views;
+- `Estimate`, `TemporalCombatState`, `SceneEntity`, and IR/SQ views;
 - factorized `SemanticAction`, capabilities/mask decisions, and semantic dispatcher;
 - typed metadata registries, optional `BehaviorProfile`, and episode schema V2;
 - V1 manifest compatibility and 64 safe automated tests.

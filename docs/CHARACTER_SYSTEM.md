@@ -10,7 +10,7 @@ the user's own lawful training-mode evidence.
 
 - temporal motion and interaction representation;
 - relative geometry, distance, pressure, defense, and resource tradeoffs;
-- the IR/SQ/IQ observation schemas;
+- the IR/SQ observation schemas;
 - factorized vertical, horizontal, skill, and direction heads;
 - scheduler, SafetyGate, episode schema, registries, and evaluation contracts.
 
@@ -59,11 +59,11 @@ unverified default permits only neutral factors.
 
 ## Identity conditioning
 
-- IR may condition on fresh, confident self and opponent identities.
-- SQ, the default, conditions on configured self identity and hides opponent identity.
-- IQ hides both identities.
+- IR is primary and may condition on fresh, confident self and opponent identities.
+- SQ conditions on configured self identity, hides opponent identity, and is used when opponent
+  identity is unavailable or unreliable.
 
-All use the same `TemporalCombatState` and shared backbone. A model replacement must not require a
+Both use the same `TemporalCombatState` and shared backbone. A model replacement must not require a
 new recorder or runtime.
 
 ## Lifecycle

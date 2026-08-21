@@ -52,7 +52,8 @@ All live input code must default to dry-run. Real input requires an explicit com
 11. Replacing a model must not require rewriting the runtime or data layer.
 12. Development proceeds as capability slices inside the final architecture, not throwaway MVPs.
 13. `TemporalCombatState` is the canonical screen-derived state. Policies receive only a versioned
-    IR, SQ, or IQ projection built from that one state.
+    IR or SQ projection built from that one state. IR is primary when opponent identity is fresh and
+    sufficiently confident; SQ is the fallback when it is not.
 14. V2 policy output is `SemanticAction`; character adapters and `ActionCapabilities` resolve it
     before the existing scheduler and safety gate. Policies never receive key bindings.
 15. Strategic intent is optional auxiliary context, not a mandatory three-controller hierarchy.
